@@ -2,8 +2,6 @@ package com.todo.api.service;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,17 +25,18 @@ import com.todo.api.util.AppConsts;
 public class TaskServiceImpl implements TaskService{
 	
 	private final String RESOURCE_NAME = "Task";
-	private final String Q_END_TASK = "UPDATE task SET finish = %s WHERE id = %s";
-	//private final String Q_FILTER_STATUS = "SELECT * FROM task WHERE finish = %s";
+
 	
 	@Autowired
 	TaskRepository taskRepository;
-	
-	@PersistenceContext
-	EntityManager entityManager;
-	
+
 	public TaskServiceImpl() {}
 
+	/**
+	 * Create one task
+	 * @param taskDTO
+	 * @return taskDTO
+	 */
 	@Override
 	public TaskDTO create(TaskDTO taskDTO) {
 		Task task = mapTaskEntity(taskDTO);
@@ -45,6 +44,12 @@ public class TaskServiceImpl implements TaskService{
 		return mapTaskDTO(taskSave);
 	}
 	
+	/**
+	 * Find task by id
+	 * @param id
+	 * @throws ApiNotFoundException
+	 * @return TaskDTO
+	 */
 	@Override
 	public TaskDTO findByID(long id) {
 		Task task = taskRepository.findById(id)
@@ -53,6 +58,10 @@ public class TaskServiceImpl implements TaskService{
 		return mapTaskDTO(task);
 	}
 	
+	/**
+	 * Get all tasks
+	 * @return List(TaskDTO)
+	 */
 	@Override
 	public List<TaskDTO> getAllTasks() {
 		List<Task> tasksList = taskRepository.findAll();
@@ -62,7 +71,8 @@ public class TaskServiceImpl implements TaskService{
 	}
 	
 	/**
-	 * 
+	 * Filter tasks by status
+	 * @param boolean -> true(tasks end) / false(pending tasks)
 	 * @return List(TaskDTO)
 	 */
 	public List<TaskDTO> filterStatus(boolean status){
@@ -79,6 +89,13 @@ public class TaskServiceImpl implements TaskService{
 		return filterTasksDTO;
 	}
 	
+	/**
+	 * Get Tasks in pageable format
+	 * @param indexPage
+	 * @param sizePage
+	 * @param sortDirection
+	 * @return TaskDTOPageableResponse
+	 */
 	@Override
 	public TaskDTOPageableResponse getTasksPagination(int indexPage, int sizePage, String sortDirection){
 
@@ -103,10 +120,13 @@ public class TaskServiceImpl implements TaskService{
 		response.setTotalPages(tasks.getTotalPages());
 		
 		return response;
-		
-		
 	}
 	
+	/**
+	 * Delete one Task by her id
+	 * @param id
+	 * @return TaskDTO (task deleted)
+	 */
 	@Override
 	public TaskDTO deleteTask(long id) {
 		
@@ -118,18 +138,23 @@ public class TaskServiceImpl implements TaskService{
 		return mapTaskDTO(task);
 	}
 	
-	@Override
+	/**
+	 * Change the status of one Task
+	 * @param status 
+	 * @param id
+	 * @return TaskDTO (Task modify)
+	 */
 	@Transactional
+	@Override
 	public TaskDTO changeStatus(boolean status, long id) {
 		
 		Task task = taskRepository.findById(id)
 				.orElseThrow(() -> new ApiException(RESOURCE_NAME, Long.toString(id), "Not found"));
 		
-		String queryStr = String.format(Q_END_TASK, status, id);
-		
 		try {
-			entityManager.createNativeQuery(queryStr).executeUpdate();
-			
+
+			taskRepository.changeStatus(status, id);
+
 			task = taskRepository.findById(id)
 					.orElseThrow(() -> new ApiException(RESOURCE_NAME, Long.toString(id), "Not found"));
 			
@@ -140,6 +165,11 @@ public class TaskServiceImpl implements TaskService{
 		return mapTaskDTO(task);
 	}
 	
+	/**
+	 * Transform Task into TaskDTO
+	 * @param taskEntity
+	 * @return taskDTO
+	 */
 	private TaskDTO mapTaskDTO(Task taskEntity) {
 		TaskDTO taskDTO = new TaskDTO();
 		
@@ -151,6 +181,11 @@ public class TaskServiceImpl implements TaskService{
 		return taskDTO;
 	}
 	
+	/**
+	 * Transform TaskDTO into Task
+	 * @param taskDTO
+	 * @return Task
+	 */
 	private Task mapTaskEntity(TaskDTO taskDTO) {
 		Task taskEntity = new Task();
 		

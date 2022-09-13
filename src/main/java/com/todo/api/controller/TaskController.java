@@ -33,6 +33,11 @@ public class TaskController {
 		return "Tests passed :D";
 	}
 	
+	/**
+	 * Get one Task by her id
+	 * @param id
+	 * @return ResponseEntity
+	 */
 	@GetMapping("/{id}")
 	public ResponseEntity<ApiResponse> findByID(@PathVariable long id){
 		TaskDTO task = taskService.findByID(id);
@@ -43,11 +48,22 @@ public class TaskController {
 				);
 	}
 	
+	/**
+	 * Get all tasks
+	 * @return ResponseEntity
+	 */
 	@GetMapping("/all")
 	public ResponseEntity<List<TaskDTO>> getAllTask(){
 		return new ResponseEntity<>(taskService.getAllTasks(), HttpStatus.OK);
 	}
 	
+	/**
+	 * Get Tasks in pageable format
+	 * @param indexPage
+	 * @param sizePage
+	 * @param sortDirection
+	 * @return ResponseEntity
+	 */
 	@GetMapping("/pageable")
 	public ResponseEntity<ApiResponse> getTasksPagination(
 				@RequestParam int indexPage,
@@ -63,6 +79,10 @@ public class TaskController {
 			);
 	}
 	
+	/**
+	 * Get tasks filter by status end
+	 * @return ResponseEnity
+	 */
 	@GetMapping("/end")
 	public ResponseEntity<ApiResponse> filterStatusEnd() {
 		List<TaskDTO> list = taskService.filterStatus(true);
@@ -74,6 +94,10 @@ public class TaskController {
 				);
 	}
 	
+	/**
+	 * Get tasks filter by status active
+	 * @return RepositoryEntity
+	 */
 	@GetMapping("/active")
 	public ResponseEntity<ApiResponse> filterStatusActive() {
 		List<TaskDTO> list = taskService.filterStatus(false);
@@ -85,12 +109,22 @@ public class TaskController {
 				);
 	}
 	
+	/**
+	 * Create new Task
+	 * @param newTask
+	 * @return ResponseEntity
+	 */
 	@PostMapping("/create")
 	public ResponseEntity<TaskDTO> create(@RequestBody TaskDTO newTask) {
 		TaskDTO taskDTO = taskService.create(newTask);
 		return new ResponseEntity<>(taskDTO, HttpStatus.CREATED);
 	}
 	
+	/**
+	 * Delete task by id
+	 * @param id
+	 * @return ResponseEntity
+	 */
 	@DeleteMapping("/{id}")
 	public ResponseEntity<ApiResponse> delete(@PathVariable long id){
 		TaskDTO taskDTO = taskService.deleteTask(id);
@@ -102,6 +136,11 @@ public class TaskController {
 				);
 	}
 	
+	/**
+	 * Finalize task by id
+	 * @param id
+	 * @return ResponseEnity
+	 */
 	@PutMapping("/end")
 	public ResponseEntity<ApiResponse> endTask(@RequestParam Long id) {
 		TaskDTO task = taskService.changeStatus(true, id);
@@ -111,6 +150,11 @@ public class TaskController {
 				);
 	}
 	
+	/**
+	 * Reactive task by id
+	 * @param id
+	 * @return ResponseEntity
+	 */
 	@PutMapping("/active")
 	public ResponseEntity<ApiResponse> activateTask(@RequestParam Long id) {
 		TaskDTO task = taskService.changeStatus(false, id);
