@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import com.todo.api.DTO.TaskDTO;
 import com.todo.api.DTO.TaskDTOPageableResponse;
 import com.todo.api.entity.Task;
-import com.todo.api.exception.ApiException;
 import com.todo.api.exception.ApiNotFoundException;
 import com.todo.api.repository.TaskRepository;
 import com.todo.api.util.AppConsts;
@@ -51,7 +50,7 @@ public class TaskServiceImpl implements TaskService{
 	 * @return TaskDTO
 	 */
 	@Override
-	public TaskDTO findByID(long id) {
+	public TaskDTO findByID(long id) throws ApiNotFoundException {
 		Task task = taskRepository.findById(id)
 				.orElseThrow(()->new ApiNotFoundException(RESOURCE_NAME, Long.toString(id)));
 		
@@ -128,14 +127,28 @@ public class TaskServiceImpl implements TaskService{
 	 * @return TaskDTO (task deleted)
 	 */
 	@Override
-	public TaskDTO deleteTask(long id) {
+	public TaskDTO deleteTask(long id) throws ApiNotFoundException {
 		
 		Task task = taskRepository.findById(id)
-						.orElseThrow(() -> new ApiException(RESOURCE_NAME, Long.toString(id), "Not found"));
+						.orElseThrow(() -> new ApiNotFoundException(RESOURCE_NAME, Long.toString(id)));
 		
 		taskRepository.deleteById(id);
 		
 		return mapTaskDTO(task);
+	}
+	
+	
+	/**
+	 * Delete all Tasks
+	 * @return List(TaskDTO) (tasks deleted)
+	 */
+	@Override
+	public List<TaskDTO> deleteAllTasks() {
+		
+		List<TaskDTO> allTasks = getAllTasks();
+		taskRepository.deleteAll();
+		
+		return allTasks;
 	}
 	
 	/**
@@ -146,21 +159,37 @@ public class TaskServiceImpl implements TaskService{
 	 */
 	@Transactional
 	@Override
-	public TaskDTO changeStatus(boolean status, long id) {
+	public TaskDTO changeStatus(boolean status, long id) throws ApiNotFoundException {
 		
 		Task task = taskRepository.findById(id)
-				.orElseThrow(() -> new ApiException(RESOURCE_NAME, Long.toString(id), "Not found"));
+				.orElseThrow(() -> new ApiNotFoundException(RESOURCE_NAME, Long.toString(id)));
+
+		taskRepository.changeStatus(status, id);
+
+		task = taskRepository.findById(id)
+				.orElseThrow(() -> new ApiNotFoundException(RESOURCE_NAME, Long.toString(id)));
+
 		
-		try {
+		return mapTaskDTO(task);
+	}
+	
+	
+	@Transactional
+	@Override
+	public TaskDTO changeProcess(long id, int process) throws ApiNotFoundException {
+		
+		if (process > 100) process = 100;
+		if (process < 0) process = 0;
+		
+		Task task = taskRepository.findById(id)
+				.orElseThrow(() -> new ApiNotFoundException(RESOURCE_NAME, Long.toString(id)));
 
-			taskRepository.changeStatus(status, id);
+		taskRepository.changeProcess(id, process);
 
-			task = taskRepository.findById(id)
-					.orElseThrow(() -> new ApiException(RESOURCE_NAME, Long.toString(id), "Not found"));
+		task = taskRepository.findById(id)
+				.orElseThrow(() -> new ApiNotFoundException(RESOURCE_NAME, Long.toString(id)));
 			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+
 		
 		return mapTaskDTO(task);
 	}
@@ -173,10 +202,11 @@ public class TaskServiceImpl implements TaskService{
 	private TaskDTO mapTaskDTO(Task taskEntity) {
 		TaskDTO taskDTO = new TaskDTO();
 		
-		taskDTO.setId(taskEntity.getId());
+		taskDTO.setId(taskEntity.getTask_id());
 		taskDTO.setName(taskEntity.getName());
 		taskDTO.setDescription(taskEntity.getDescription());
-		taskDTO.setFinish(taskEntity.getFinish());
+		taskDTO.setProcess(taskEntity.getProcess());
+		taskDTO.setClose(taskEntity.getClose());
 		
 		return taskDTO;
 	}
@@ -191,7 +221,8 @@ public class TaskServiceImpl implements TaskService{
 		
 		taskEntity.setName(taskDTO.getName());
 		taskEntity.setDescription(taskDTO.getDescription());
-		taskEntity.setFinish(taskDTO.getFinish());
+		taskEntity.setProcess(taskDTO.getProcess());
+		taskEntity.setClose(taskDTO.getClose());
 		
 		return taskEntity;
 	}

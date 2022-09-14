@@ -1,7 +1,5 @@
 package com.todo.api.util;
 
-import java.util.ArrayList;
-
 public class ApiResponse {
 	
 	private boolean error;
@@ -14,6 +12,11 @@ public class ApiResponse {
 		this.data = data;
 		this.error = false;
 		this.msg = "";
+	}
+	
+	public ApiResponse(boolean error, String msg) {
+		this.error = error;
+		this.msg = msg;
 	}
 
 	public boolean isError() {

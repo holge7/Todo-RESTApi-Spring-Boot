@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.todo.api.DTO.TaskDTO;
 import com.todo.api.DTO.TaskDTOPageableResponse;
+import com.todo.api.exception.ApiNotFoundException;
 import com.todo.api.service.TaskService;
 import com.todo.api.util.ApiResponse;
 import com.todo.api.util.AppConsts;
@@ -28,42 +29,47 @@ public class TaskController {
 	@Autowired
 	private TaskService taskService;
 	
+	
+	/*
+	 * GET Zone
+	 */
+	
 	@GetMapping("/test")
 	public String test() {
 		return "Tests passed :D";
 	}
 	
-	/**
-	 * Get one Task by her id
-	 * @param id
-	 * @return ResponseEntity
-	 */
+
 	@GetMapping("/{id}")
 	public ResponseEntity<ApiResponse> findByID(@PathVariable long id){
-		TaskDTO task = taskService.findByID(id);
-		
-		return new ResponseEntity<ApiResponse>(
+		try {			
+			TaskDTO task = taskService.findByID(id);
+			
+			return new ResponseEntity<ApiResponse>(
 					new ApiResponse(task),
 					HttpStatus.OK
 				);
+		} catch (ApiNotFoundException e) {
+			return new ResponseEntity<ApiResponse>(
+					new ApiResponse(true, e.toString()),
+					HttpStatus.NOT_FOUND
+				);
+		}
+		
 	}
 	
-	/**
-	 * Get all tasks
-	 * @return ResponseEntity
-	 */
+
 	@GetMapping("/all")
-	public ResponseEntity<List<TaskDTO>> getAllTask(){
-		return new ResponseEntity<>(taskService.getAllTasks(), HttpStatus.OK);
+	public ResponseEntity<ApiResponse> getAllTask(){
+		List<TaskDTO> tasks = taskService.getAllTasks();
+		ApiResponse datApiResponse = new ApiResponse(tasks);
+		return new ResponseEntity<>(
+						datApiResponse, 
+						HttpStatus.OK
+					);
 	}
 	
-	/**
-	 * Get Tasks in pageable format
-	 * @param indexPage
-	 * @param sizePage
-	 * @param sortDirection
-	 * @return ResponseEntity
-	 */
+
 	@GetMapping("/pageable")
 	public ResponseEntity<ApiResponse> getTasksPagination(
 				@RequestParam int indexPage,
@@ -79,89 +85,137 @@ public class TaskController {
 			);
 	}
 	
-	/**
-	 * Get tasks filter by status end
-	 * @return ResponseEnity
-	 */
+
 	@GetMapping("/end")
 	public ResponseEntity<ApiResponse> filterStatusEnd() {
 		List<TaskDTO> list = taskService.filterStatus(true);
 		ApiResponse response = new ApiResponse(list);
 		
 		return new ResponseEntity<ApiResponse>(
-				response,
-				HttpStatus.OK
+					response,
+					HttpStatus.OK
 				);
 	}
 	
-	/**
-	 * Get tasks filter by status active
-	 * @return RepositoryEntity
-	 */
+
 	@GetMapping("/active")
 	public ResponseEntity<ApiResponse> filterStatusActive() {
 		List<TaskDTO> list = taskService.filterStatus(false);
 		ApiResponse response = new ApiResponse(list);
 		
 		return new ResponseEntity<ApiResponse>(
-				response,
-				HttpStatus.OK
+					response,
+					HttpStatus.OK
 				);
 	}
 	
-	/**
-	 * Create new Task
-	 * @param newTask
-	 * @return ResponseEntity
+
+	/*
+	 * POST Zone
 	 */
+	
 	@PostMapping("/create")
-	public ResponseEntity<TaskDTO> create(@RequestBody TaskDTO newTask) {
+	public ResponseEntity<ApiResponse> create(@RequestBody TaskDTO newTask) {
 		TaskDTO taskDTO = taskService.create(newTask);
-		return new ResponseEntity<>(taskDTO, HttpStatus.CREATED);
+		ApiResponse response = new ApiResponse(taskDTO);
+		return new ResponseEntity<>(
+					response,
+					HttpStatus.CREATED
+				);
 	}
 	
-	/**
-	 * Delete task by id
-	 * @param id
-	 * @return ResponseEntity
+	
+	/*
+	 * DELETE Zone
 	 */
+
 	@DeleteMapping("/{id}")
 	public ResponseEntity<ApiResponse> delete(@PathVariable long id){
-		TaskDTO taskDTO = taskService.deleteTask(id);
 		
-		ApiResponse response = new ApiResponse(taskDTO);
+		try {
+			TaskDTO taskDTO = taskService.deleteTask(id);
+			
+			ApiResponse response = new ApiResponse(taskDTO);
+			return new ResponseEntity<ApiResponse>(
+						response,
+						HttpStatus.OK
+					);
+		} catch (ApiNotFoundException e) {
+			return new ResponseEntity<ApiResponse>(
+					new ApiResponse(true, e.toString()),
+					HttpStatus.NOT_FOUND
+				);
+		}
+		
+	}
+	
+	@DeleteMapping("/all")
+	public ResponseEntity<ApiResponse> deleteAll(){
+		List<TaskDTO> tasksDeleted = taskService.deleteAllTasks();
+		
+		ApiResponse response = new ApiResponse(tasksDeleted);
 		return new ResponseEntity<ApiResponse>(
 					response,
 					HttpStatus.OK
 				);
 	}
 	
-	/**
-	 * Finalize task by id
-	 * @param id
-	 * @return ResponseEnity
+
+	/*
+	 *  PUT Zone
 	 */
+	
 	@PutMapping("/end")
 	public ResponseEntity<ApiResponse> endTask(@RequestParam Long id) {
-		TaskDTO task = taskService.changeStatus(true, id);
-		return new ResponseEntity<ApiResponse>(
-				new ApiResponse(task), 
-				HttpStatus.OK
+		try {
+			TaskDTO task = taskService.changeStatus(true, id);
+			return new ResponseEntity<ApiResponse>(
+						new ApiResponse(task), 
+						HttpStatus.OK
+					);			
+		} catch (ApiNotFoundException e) {
+			return new ResponseEntity<ApiResponse>(
+					new ApiResponse(true, e.toString()),
+					HttpStatus.NOT_FOUND
 				);
+		}
 	}
 	
-	/**
-	 * Reactive task by id
-	 * @param id
-	 * @return ResponseEntity
-	 */
+
 	@PutMapping("/active")
 	public ResponseEntity<ApiResponse> activateTask(@RequestParam Long id) {
-		TaskDTO task = taskService.changeStatus(false, id);
-		return new ResponseEntity<ApiResponse>(
-				new ApiResponse(task), 
-				HttpStatus.OK
+		try {
+			TaskDTO task = taskService.changeStatus(false, id);
+			return new ResponseEntity<ApiResponse>(
+					new ApiResponse(task), 
+					HttpStatus.OK
 				);
+		} catch (ApiNotFoundException e) {
+			return new ResponseEntity<ApiResponse>(
+					new ApiResponse(true, e.toString()),
+					HttpStatus.NOT_FOUND
+				);
+		}
+	}
+	
+	@PutMapping("/process")
+	public ResponseEntity<ApiResponse> changeProcess(@RequestParam long id, 
+													@RequestParam int process)
+	{
+		
+		try {
+			TaskDTO task = taskService.changeProcess(id, process);
+			return new ResponseEntity<ApiResponse>(
+					new ApiResponse(task), 
+					HttpStatus.OK
+				);
+		} catch (ApiNotFoundException e) {
+			return new ResponseEntity<ApiResponse>(
+					new ApiResponse(true, e.toString()),
+					HttpStatus.NOT_FOUND
+				);
+		}
+		
 	}
 	
 	

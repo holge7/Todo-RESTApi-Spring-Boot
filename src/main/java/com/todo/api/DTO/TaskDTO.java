@@ -5,19 +5,29 @@ public class TaskDTO {
 	private Long id;
 	private String name;
 	private String description;
-	private Boolean finish;
+	private int process;
+	private Boolean close;
 
 	public TaskDTO() {}
 
-	public TaskDTO(Long id,String name, String description, Boolean finish) {
+	public TaskDTO(Long id,String name, String description, int process, Boolean close) {
 		this.id = id;
 		this.name = name;
 		this.description = description;
-		this.finish = finish;
+		this.process = process;
+		this.close = close;
 	}
 
 	public Long getId() {
 		return id;
+	}
+
+	public int getProcess() {
+		return process;
+	}
+
+	public void setProcess(int process) {
+		this.process = process;
 	}
 
 	public void setId(Long id) {
@@ -40,12 +50,12 @@ public class TaskDTO {
 		this.description = description;
 	}
 
-	public Boolean getFinish() {
-		return finish;
+	public Boolean getClose() {
+		return close;
 	}
 
-	public void setFinish(Boolean finish) {
-		this.finish = finish;
+	public void setClose(Boolean close) {
+		this.close = close;
 	}
 
 }

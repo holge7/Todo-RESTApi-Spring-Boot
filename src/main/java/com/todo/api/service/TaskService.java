@@ -17,7 +17,11 @@ public interface TaskService {
 	
 	public TaskDTO deleteTask(long id);
 	
+	public List<TaskDTO> deleteAllTasks();
+	
 	public TaskDTO changeStatus(boolean status, long id);
 	
 	public List<TaskDTO> filterStatus(boolean status);
+	
+	public TaskDTO changeProcess(long id, int process);
 }
